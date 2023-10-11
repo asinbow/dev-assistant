@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Sample WebExtension",
+  "name": "Dev Assistant",
   "version": "0.0.0",
 
   "icons": {
@@ -9,13 +9,16 @@
     "48": "assets/icons/favicon-48.png",
     "128": "assets/icons/favicon-128.png"
   },
-  "description": "Sample description",
+  "description": "Dev Assistant",
   "homepage_url": "https://github.com/abhijithvijayan/web-extension-starter",
-  "short_name": "Sample Name",
+  "short_name": "DevAssist",
 
   "permissions": [
     "activeTab",
+    "tabs",
     "storage",
+    "contextMenus",
+    "notifications",
     "http://*/*",
     "https://*/*"
   ],
