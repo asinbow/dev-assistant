@@ -11,6 +11,12 @@ browser.contextMenus.create({
   contexts: ['selection'],
 });
 
+browser.contextMenus.create({
+  id: 'copyStackTraceFromJsonLog',
+  title: 'Copy stack trace from JSON log',
+  contexts: ['selection'],
+});
+
 function copy(text: string): void {
   const copyFrom = document.createElement('textarea');
   copyFrom.textContent = text;
@@ -33,7 +39,11 @@ function getJsonText(input: unknown): string | undefined {
   return input.substring(startIndex, endIndex + 1);
 }
 
-browser.contextMenus.onClicked.addListener(async () => {
+async function copyJsonLog(
+  message: string,
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  toText: (json: any) => string
+): Promise<void> {
   const results = await browser.tabs.executeScript({
     code: 'window.getSelection().toString();',
   });
@@ -48,15 +58,41 @@ browser.contextMenus.onClicked.addListener(async () => {
   if (typeof json.body === 'string') {
     json.body = JSON.parse(json.body);
   }
-  copy(JSON.stringify(json, null, 2));
+  copy(toText(json));
 
   const notificationId = await browser.notifications.create({
     type: 'basic',
     iconUrl: browser.runtime.getURL('assets/icons/favicon-48.png'),
     title: 'Copied',
-    message: 'Copied hierarchical JSON log',
+    message,
   });
   setTimeout(() => {
     browser.notifications.clear(notificationId);
   }, 200);
+}
+
+browser.contextMenus.onClicked.addListener(async ({menuItemId}) => {
+  try {
+    if (menuItemId === 'copyHierarchicalJsonLog') {
+      await copyJsonLog('Copied hierarchical JSON log', (json) => JSON.stringify(json, null, 2));
+    }
+
+    if (menuItemId === 'copyStackTraceFromJsonLog') {
+      await copyJsonLog(
+        'Copied stack trace from JSON log',
+        (json) => json.body.stack_trace
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    const notificationId = await browser.notifications.create({
+      type: 'basic',
+      iconUrl: browser.runtime.getURL('assets/icons/favicon-48.png'),
+      title: 'Error',
+      message: error.message,
+    });
+    setTimeout(() => {
+      browser.notifications.clear(notificationId);
+    }, 500);
+  }
 });
